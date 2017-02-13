@@ -28,7 +28,7 @@ class Index extends Component {
 
 	constructor(props){
 		super(props);
-		this.state = {stockNames: [], stocks: [], socket: io()};
+		this.state = {stockNames: [], stocks: [], socket: io(), newStock: ''};
 	}
 	
 	componentDidMount(){
@@ -57,18 +57,6 @@ class Index extends Component {
     });
   }
 
-  add(){
-    var name = prompt();
-    if(name !== ""){
-      Client.post('/api/newstock/', {stock: name}, (res) => {
-        if(res){
-          this.setState({stockNames: res});
-          this.state.socket.emit('change');
-        }
-      });
-    }
-  }
-
   deleteStock(stock){
     const t = this;
     Client.del('/api/deletestock', {stock: stock}, (res) => {
@@ -77,15 +65,37 @@ class Index extends Component {
     })
   }
 
+  changeInput(event) {
+    this.setState({newStock: event.target.value});
+  }
+
+  submitStock(e){
+    e.preventDefault();
+    if(this.state.newStock !== ""){
+      this.setState({newStock: ''})
+      Client.post('/api/newstock/', {stock: this.state.newStock}, (res) => {
+        if(res){
+          this.setState({stockNames: res});
+          this.state.socket.emit('change');
+        }
+      });
+    }
+  }
+
   render(){
     return (
     	<div>
-    		{this.state.stockNames.map( (stock, i) => {
-    			return <h1 key={i} onClick={this.deleteStock.bind(this, stock)}>{stock}</h1>;
-    		})}
         <Chart data={this.state.stocks} names={this.state.stockNames}/>
-
-        <button onClick={this.add.bind(this)}>Add</button>
+        <div className='row-wrap'>
+          {this.state.stockNames.map( (stock, i) => {
+            return <div key={i} onClick={this.deleteStock.bind(this, stock)} className='stock'>{stock}</div>;
+          })}
+          <div className='stock'>
+            <form onSubmit={this.submitStock.bind(this)}>
+              <input placeholder='New Stock' value={this.state.newStock} onChange={this.changeInput.bind(this)}></input>
+            </form>
+          </div>
+        </div>
       </div>
     );
   }
