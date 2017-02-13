@@ -60,7 +60,6 @@ class Index extends Component {
   deleteStock(stock){
     const t = this;
     Client.del('/api/deletestock', {stock: stock}, (res) => {
-      t.setState({stockNames: res});
       t.state.socket.emit('change');
     })
   }
@@ -75,11 +74,14 @@ class Index extends Component {
       this.setState({newStock: ''})
       Client.post('/api/newstock/', {stock: this.state.newStock}, (res) => {
         if(res){
-          this.setState({stockNames: res});
           this.state.socket.emit('change');
         }
       });
     }
+  }
+
+  focus(){
+    this.stockInput.focus();
   }
 
   render(){
@@ -90,9 +92,9 @@ class Index extends Component {
           {this.state.stockNames.map( (stock, i) => {
             return <div key={i} onClick={this.deleteStock.bind(this, stock)} className='stock'>{stock}</div>;
           })}
-          <div className='stock'>
+          <div className='stock' id='input-stock' onClick={this.focus.bind(this)}>
             <form onSubmit={this.submitStock.bind(this)}>
-              <input placeholder='New Stock' value={this.state.newStock} onChange={this.changeInput.bind(this)}></input>
+              <input placeholder='New Stock' value={this.state.newStock} onChange={this.changeInput.bind(this)} ref={(input) => { this.stockInput = input; }} ></input>
             </form>
           </div>
         </div>
