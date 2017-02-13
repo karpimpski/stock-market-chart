@@ -8,8 +8,8 @@ const {LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend} = Recharts
 const Chart = React.createClass({
   render () {
     return (
-      <LineChart width={600} height={300} data={this.props.data} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-         <XAxis dataKey="name"/>
+      <LineChart width={1400} height={300} data={this.props.data} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+         <XAxis dataKey="name" interval={10}/>
          <YAxis/>
          <CartesianGrid strokeDasharray="3 3"/>
          <Tooltip/>
@@ -27,42 +27,63 @@ class Index extends Component {
 
 	constructor(props){
 		super(props);
-		this.state = {stockNames: ['AMZN', 'AAPL', 'GOOG'], stocks: []};
+		this.state = {stockNames: [], stocks: []};
 	}
 	
 	componentDidMount(){
-	  let objects = [];
-	  this.state.stockNames.map( (name) => {
-	    Client.get('/api/stock/' + name, (res) => {
-	      res.map( (x, index) => {
-	        
-          if(x[0] !== ''){
-            if(!objects[index]) objects[index] = {};
-  	        objects[index]['name'] = x[0];
-  	        objects[index][name] = Number(x[1]);
-          }
-        });
-	      this.setState({stocks: JSON.parse(JSON.stringify(objects))});
-	    });
-	  });
+	  
+    Client.get('/api/stocks', (res) => {
+      this.setState({stockNames: res});
+      this.setStocks();
+    });
 	}
 
+  setStocks(){
+    let objects = [];
+    this.state.stockNames.map( (name) => {
+      Client.get('/api/stock/' + name, (res) => {
+        res.map( (x, index) => {
+          
+          if(x[0] !== ''){
+            if(!objects[index]) objects[index] = {};
+            objects[index]['name'] = x[0];
+            objects[index][name] = Number(x[1]);
+          }
+        });
+        this.setState({stocks: JSON.parse(JSON.stringify(objects))});
+      });
+    });
+  }
+
+  add(){
+    var name = prompt();
+    if(name !== ""){
+      Client.post('/api/newstock/', {stock: name}, (res) => {
+        if(res){
+          this.setState({stockNames: res});
+          this.setStocks();
+        }
+      });
+    }
+  }
+
+  deleteStock(stock){
+    const t = this;
+    Client.del('/api/deletestock', {stock: stock}, (res) => {
+      t.setState({stockNames: res});
+      t.setStocks();
+    })
+  }
+
   render(){
-     const data = [
-      {name: 'Page A', uv: 4000, pv: 2400, amt: 2400},
-      {name: 'Page B', uv: 3000, pv: 1398, amt: 2210},
-      {name: 'Page C', uv: 2000, pv: 9800, amt: 2290},
-      {name: 'Page D', uv: 2780, pv: 3908, amt: 2000},
-      {name: 'Page E', uv: 1890, pv: 4800, amt: 2181},
-      {name: 'Page F', uv: 2390, pv: 3800, amt: 2500},
-      {name: 'Page G', uv: 3490, pv: 4300, amt: 2100},
-    ];
     return (
     	<div>
     		{this.state.stockNames.map( (stock, i) => {
-    			return <h1 key={i}>{stock}</h1>;
+    			return <h1 key={i} onClick={this.deleteStock.bind(this, stock)}>{stock}</h1>;
     		})}
         <Chart data={this.state.stocks} names={this.state.stockNames}/>
+
+        <button onClick={this.add.bind(this)}>Add</button>
       </div>
     );
   }

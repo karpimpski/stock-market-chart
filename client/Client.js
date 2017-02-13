@@ -28,5 +28,16 @@ function post(query, d, cb){
   });
 }
 
-const Client = { get, patch, post };
+function del(query, d, cb){
+  $.ajax({
+    url: query,
+    type: 'DELETE',
+    data: d,
+    success: function(data) {
+      cb(JSON.parse(data));
+    }
+  });
+}
+
+const Client = { get, patch, post, del };
 export default Client;
