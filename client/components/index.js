@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import './index.scss';
 import Client from '../Client';
+import io from 'socket.io-client';
 const Recharts = require('recharts');
 const {LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend} = Recharts;
 
@@ -27,15 +28,17 @@ class Index extends Component {
 
 	constructor(props){
 		super(props);
-		this.state = {stockNames: [], stocks: []};
+		this.state = {stockNames: [], stocks: [], socket: io()};
 	}
 	
 	componentDidMount(){
-	  
-    Client.get('/api/stocks', (res) => {
-      this.setState({stockNames: res});
-      this.setStocks();
+	  this.state.socket.on('change', () => {
+      Client.get('/api/stocks', (res) => {
+        this.setState({stockNames: res});
+        this.setStocks();
+      });
     });
+    this.state.socket.emit('change');
 	}
 
   setStocks(){
@@ -43,7 +46,6 @@ class Index extends Component {
     this.state.stockNames.map( (name) => {
       Client.get('/api/stock/' + name, (res) => {
         res.map( (x, index) => {
-          
           if(x[0] !== ''){
             if(!objects[index]) objects[index] = {};
             objects[index]['name'] = x[0];
@@ -61,7 +63,7 @@ class Index extends Component {
       Client.post('/api/newstock/', {stock: name}, (res) => {
         if(res){
           this.setState({stockNames: res});
-          this.setStocks();
+          this.state.socket.emit('change');
         }
       });
     }
@@ -71,7 +73,7 @@ class Index extends Component {
     const t = this;
     Client.del('/api/deletestock', {stock: stock}, (res) => {
       t.setState({stockNames: res});
-      t.setStocks();
+      t.state.socket.emit('change');
     })
   }
 

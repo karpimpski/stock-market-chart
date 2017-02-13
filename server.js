@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
 const request = require('request');
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -12,7 +14,16 @@ const Stock = require('./models/stock.js');
 
 app.use(express.static('./client/public'));
 
+//CHANGE THIS NUMBER TO SELECT DIFFERENT RANGE
 const days = 100;
+
+io.on('connection', function(socket){
+
+  socket.on('change', function(){
+    io.emit('change');
+  });
+
+});
 
 app.get('/api/stock/:stock', function(req, res){
   const url = `http://api.kibot.com/?action=history&symbol=${req.params.stock}&interval=daily&period=${days}`;
@@ -62,4 +73,6 @@ app.get('*', function(req, res){
 	res.sendFile(__dirname + '/client/public/index.html');
 });
 
-app.listen(process.env.PORT || 3000);
+http.listen(process.env.PORT || 3000, function(){
+  
+});
