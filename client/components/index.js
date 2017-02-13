@@ -22,7 +22,7 @@ const Chart = React.createClass({
         <LineChart width={1400} height={300} data={this.props.data} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
            <XAxis dataKey="name" interval={10}/>
            <YAxis/>
-           <Tooltip/>
+           <Tooltip labelStyle={{color: 'black'}}/>
            <Legend />
            {this.props.names.map(function(name, i){
             return <Line type="monotone" dataKey={name} stroke={colors[i]} key={i} dot={false}/>
