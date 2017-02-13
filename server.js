@@ -48,14 +48,21 @@ app.get('/api/stocks', function(req, res){
 });
 
 app.post('/api/newstock', function(req, res){
-  Stock.create({name: req.body.stock}, function(err, newStock){
-    if(err) res.end(JSON.stringify(false));
-
-    Stock.find({}, function(err, stocks){
-      const arr = stocks.map( stock => stock.name);
-      res.end(JSON.stringify(arr));
-    });
-  });
+  request(`http://api.kibot.com/?action=history&symbol=${req.body.stock}&interval=daily&period=${days}`, function(err, response, body){
+    if(body.slice(0,3) == '404'){
+      res.end(JSON.stringify(false));
+    }
+    else{
+      Stock.create({name: req.body.stock}, function(err, newStock){
+        if(err) res.end(JSON.stringify(false));
+        Stock.find({}, function(err, stocks){
+          const arr = stocks.map( stock => stock.name);
+          res.end(JSON.stringify(arr));
+        });
+      });
+    }
+  })
+  
 });
 
 app.delete('/api/deletestock', function(req, res){

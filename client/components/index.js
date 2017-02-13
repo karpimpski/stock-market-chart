@@ -6,20 +6,30 @@ import io from 'socket.io-client';
 const Recharts = require('recharts');
 const {LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend} = Recharts;
 
+const randomColor = require('randomcolor');
+
 const Chart = React.createClass({
+  
   render () {
+    const colors = randomColor({
+        count: this.props.names.length,
+        luminosity: 'bright',
+        hue: 'random'
+    });
     return (
-      <LineChart width={1400} height={300} data={this.props.data} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-         <XAxis dataKey="name" interval={10}/>
-         <YAxis/>
-         <CartesianGrid strokeDasharray="3 3"/>
-         <Tooltip/>
-         <Legend />
-         {this.props.names.map(function(name, i){
-          return <Line type="monotone" dataKey={name} stroke={"#"+((1<<24)*Math.random()|0).toString(16)} key={i}/>
-         })}
-         
-      </LineChart>
+      <div>
+        <h1 className='title'>Stocks</h1>
+        <LineChart width={1400} height={300} data={this.props.data} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+           <XAxis dataKey="name" interval={10}/>
+           <YAxis/>
+           <Tooltip/>
+           <Legend />
+           {this.props.names.map(function(name, i){
+            return <Line type="monotone" dataKey={name} stroke={colors[i]} key={i} dot={false}/>
+           })}
+           
+        </LineChart>
+      </div>
     );
   }
 });
@@ -76,6 +86,9 @@ class Index extends Component {
         if(res){
           this.state.socket.emit('change');
         }
+        else{
+          alert('Not a valid stock');
+        }
       });
     }
   }
@@ -90,7 +103,12 @@ class Index extends Component {
         <Chart data={this.state.stocks} names={this.state.stockNames}/>
         <div className='row-wrap'>
           {this.state.stockNames.map( (stock, i) => {
-            return <div key={i} onClick={this.deleteStock.bind(this, stock)} className='stock'>{stock}</div>;
+            return (
+              <div key={i} onClick={this.deleteStock.bind(this, stock)} className='stock'>
+                <span className='name'>{stock}</span>
+                <span className='delete'>X</span>
+              </div>
+            )
           })}
           <div className='stock' id='input-stock' onClick={this.focus.bind(this)}>
             <form onSubmit={this.submitStock.bind(this)}>
