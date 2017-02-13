@@ -1,3 +1,5 @@
+const webpack = require('webpack');
+
 module.exports = {
 	entry: './components/index.js',
 	output: {
@@ -18,5 +20,25 @@ module.exports = {
         loader: 'style-loader!css-loader!sass-loader'
 			}
 		]
-	}
+	},
+	plugins: [
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        sequences: true,
+        dead_code: true,
+        conditionals: true,
+        booleans: true,
+        unused: true,
+        if_return: true,
+        join_vars: true,
+        drop_console: true
+      },
+      mangle: {
+        except: ['$super', '$', 'exports', 'require']
+      },
+      output: {
+        comments: false
+      } 
+    })
+  ]
 }
